@@ -1,8 +1,9 @@
 # DRYRUNmain.py
 # 🔁 ExtremeViper DRY-RUN Engine
-# Version: 0.0.13+
-# Description: Multi-broker scanner (OANDA, Kraken) with adaptive throttle, confidence scoring,
-# risk-based lot sizing, duplicate/cooldown filters, and DRY_RUN-safe execution.
+# Version: 0.0.14-stable
+# Description: Multi-broker scanner (OANDA, Kraken) with adaptive throttle,
+# confidence scoring, risk-based lot sizing, duplicate/cooldown filters,
+# and DRY_RUN-safe execution.
 
 import os
 import time
@@ -19,7 +20,7 @@ from utils.trade_control_logger import is_in_cooldown, is_duplicate, update_trad
 
 # === ENV & Logging Setup ===
 load_dotenv()
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message)s")
 logger = logging.getLogger(__name__)
 
 DRY_RUN = os.getenv("DRY_RUN", "true").lower() == "true"
@@ -44,41 +45,59 @@ def main():
             broker = get_broker(broker_name)
 
             for pair in pairs:
-                logger.info(f"📡 Fetching live signal for {pair} via {broker_name.upper()}...")
-                signal = fetch_live_signal(pair, broker_name)
-                if not signal:
-                    logger.warning(f"⚠️ No signal data for {pair}")
-                    continue
+                try:
+                    logger.info(f"📡 Fetching live signal for {pair} via {broker_name.upper()}...")
+                    signal = fetch_live_signal(pair, broker_name)
+                    if not signal:
+                        logger.warning(f"⚠️ No signal data for {pair}")
+                        continue
 
-                score = score_signal(signal)
-                threshold = get_adaptive_threshold(signal)
-                lot_size = calculate_lot_size(score, broker_name)
+                    # --- Score Extraction ---
+                    scored = score_signal(signal)
+                    if isinstance(scored, dict):
+                        score = float(scored.get("score", 0))
+                    else:
+                        score = float(scored)
 
-                logger.info(f"🧠 Scored {pair} = {score:.2f}/10 | Threshold = {threshold:.2f} | Lot Size = {lot_size}")
+                    threshold = get_adaptive_threshold(signal)
+                    lot_size = calculate_lot_size(score, broker_name)
 
-                if score < threshold:
-                    logger.info(f"🚫 Ignored weak signal ({score:.2f} < {threshold:.2f}) for {pair}")
-                    continue
-
-                if is_in_cooldown(pair, broker_name) or is_duplicate(pair, broker_name):
-                    logger.info(f"⏳ Skipping {pair} - cooldown or duplicate active.")
-                    continue
-
-                if DRY_RUN:
-                    logger.info(f"🤖 [DRY-RUN] Would place order: {pair} | Side: {signal['side']} | Size: {lot_size}")
-                else:
-                    result = broker.place_order(
-                        pair=pair,
-                        side=signal["side"],
-                        price=signal["price"],
-                        sl=signal["stop_loss"],
-                        tp=signal["take_profit"],
-                        lot_size=lot_size
+                    logger.info(
+                        f"🧠 Scored {pair} = {score:.2f}/10 | Threshold = {threshold:.2f} | Lot Size = {lot_size:.5f}"
                     )
-                    logger.info(f"✅ Order Placed: {result}")
-                    update_trade_log(pair, broker_name)
+
+                    # --- Decision Filters ---
+                    if score < threshold:
+                        logger.info(f"🚫 Ignored weak signal ({score:.2f} < {threshold:.2f}) for {pair}")
+                        continue
+
+                    if is_in_cooldown(pair, broker_name) or is_duplicate(pair, broker_name):
+                        logger.info(f"⏳ Skipping {pair} - cooldown or duplicate active.")
+                        continue
+
+                    # --- Execution Phase ---
+                    if DRY_RUN:
+                        logger.info(
+                            f"🤖 [DRY-RUN] Would place order: {pair} | Side: {signal.get('side')} | "
+                            f"Size: {lot_size:.5f}"
+                        )
+                    else:
+                        result = broker.place_order(
+                            pair=pair,
+                            side=signal.get("side"),
+                            price=signal.get("price"),
+                            sl=signal.get("stop_loss"),
+                            tp=signal.get("take_profit"),
+                            lot_size=lot_size,
+                        )
+                        logger.info(f"✅ Order Placed: {result}")
+                        update_trade_log(pair, broker_name)
+
+                except Exception as e:
+                    logger.error(f"💥 Error while processing {pair} ({broker_name}): {e}", exc_info=False)
 
         time.sleep(30)  # 🕒 Delay between full broker loops
+
 
 if __name__ == "__main__":
     main()
