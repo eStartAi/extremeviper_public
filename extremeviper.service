@@ -1,0 +1,23 @@
+[Unit]
+Description=ExtremeViper Trading Bot (OANDA + Kraken)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/extremeviper
+Environment=PYTHONUNBUFFERED=1
+# .env is read by python-dotenv inside your script
+ExecStart=/home/ubuntu/extremeviper/.venv/bin/python -u /home/ubuntu/extremeviper/main.py
+Restart=always
+RestartSec=5
+TimeoutStartSec=30
+TimeoutStopSec=20
+StandardOutput=journal
+StandardError=journal
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

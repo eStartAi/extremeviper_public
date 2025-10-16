@@ -1,0 +1,9 @@
+{
+  "EUR_USD": {
+    "last_side": "sell",
+    "last_price": 1.16702,
+    "last_signal_time": 1760580000.84272,
+    "last_trade_time": 1760580000.8430758,
+    "last_trade_result": "win"
+  }
+}

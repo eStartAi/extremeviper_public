@@ -1,0 +1,16 @@
+[Unit]
+Description=ExtremeViper DRYRUN Simulation Bot
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/extremeviper
+Environment="PATH=/home/ubuntu/extremeviper/.venv/bin"
+ExecStart=/home/ubuntu/extremeviper/.venv/bin/python3 /home/ubuntu/extremeviper/DRYRUNmain.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/ubuntu/extremeviper/logs/dryrun_service.log
+StandardError=append:/home/ubuntu/extremeviper/logs/dryrun_service_error.log
+
+[Install]
+WantedBy=multi-user.target

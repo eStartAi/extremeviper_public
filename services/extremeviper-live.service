@@ -1,0 +1,16 @@
+[Unit]
+Description=ExtremeViper LIVE Trading Bot
+After=network.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/extremeviper
+Environment="PATH=/home/ubuntu/extremeviper/.venv/bin"
+ExecStart=/home/ubuntu/extremeviper/.venv/bin/python3 /home/ubuntu/extremeviper/LIVEmain.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/ubuntu/extremeviper/logs/live_service.log
+StandardError=append:/home/ubuntu/extremeviper/logs/live_service_error.log
+
+[Install]
+WantedBy=multi-user.target
