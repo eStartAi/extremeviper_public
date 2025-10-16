@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Enhanced Environment Validator for ExtremeViper
-✅ Backward compatible: supports both old (DEFAULT_SL_PCT) and new (STOP_LOSS_PCT) naming
+✅ Supports alternate variable names (STOP_LOSS_PCT, TAKE_PROFIT_PCT, etc.)
 """
 
 import os
@@ -9,7 +9,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# --- Core required variables (canonical names) ---
 REQUIRED_VARS = [
     "DEFAULT_BROKER",
     "DRY_RUN",
@@ -29,36 +28,36 @@ REQUIRED_VARS = [
     "ENABLE_TELEGRAM_ALERTS",
 ]
 
-# --- Backward-compatibility mapping ---
 ALTERNATE_KEYS = {
     "DEFAULT_SL_PCT": ["STOP_LOSS_PCT"],
     "DEFAULT_TP_PCT": ["TAKE_PROFIT_PCT"],
     "MAX_DAILY_LOSS": ["MAX_DAILY_DRAWDOWN_PCT"],
-    # Optionally also accept generic risk sizing keys
     "RISK_PCT": ["RISK_PERCENT", "RISK_PER_TRADE"],
 }
 
-missing = []
+def validate_env():
+    missing = []
 
-for var in REQUIRED_VARS:
-    # check if canonical var exists
-    if os.getenv(var):
-        continue
+    for var in REQUIRED_VARS:
+        if os.getenv(var):
+            continue
 
-    # check alternates
-    alternates = ALTERNATE_KEYS.get(var, [])
-    if any(os.getenv(alt) for alt in alternates):
-        continue
+        alternates = ALTERNATE_KEYS.get(var, [])
+        if any(os.getenv(alt) for alt in alternates):
+            continue
 
-    # mark missing
-    missing.append(var)
+        missing.append(var)
 
-if missing:
-    print("❌ Missing required environment variables:\n")
-    for m in missing:
-        print(f" - {m}")
-    print("\n🛑 Fix your .env file.")
-    exit(1)
+    if missing:
+        print("❌ Missing required environment variables:\n")
+        for m in missing:
+            print(f" - {m}")
+        print("\n🛑 Fix your .env file.")
+        return False
 
-print("✅ Environment validated successfully!")
+    print("✅ Environment validated successfully!")
+    return True
 
+# Optional direct run mode for testing:
+if __name__ == "__main__":
+    validate_env()

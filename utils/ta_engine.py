@@ -92,4 +92,5 @@ def calc_vol_spike(highs, lows, period=14):
         return 1.0
 
     spike = avg_recent / avg_prev
-    return round(spike, 2)
+    return float(round(spike, 2))
+
