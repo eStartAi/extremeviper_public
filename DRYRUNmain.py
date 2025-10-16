@@ -1,9 +1,11 @@
-# DRYRUNmain.py
-# 🔁 ExtremeViper DRY-RUN Engine
-# Version: 0.0.14-stable
-# Description: Multi-broker scanner (OANDA, Kraken) with adaptive throttle,
+# ==============================================================
+# 🐍 ExtremeViper DRY-RUN Engine (v0.1-SAFE)
+# --------------------------------------------------------------
+# Description:
+# Multi-broker scanner (OANDA, Kraken) with adaptive throttle,
 # confidence scoring, risk-based lot sizing, duplicate/cooldown filters,
-# and DRY_RUN-safe execution.
+# and Telegram kill-switch + status command for full safety.
+# ==============================================================
 
 import os
 import time
@@ -17,6 +19,7 @@ from utils.score_engine import score_signal
 from utils.risk_manager import calculate_lot_size
 from utils.adaptive_throttle import get_adaptive_threshold
 from utils.trade_control_logger import is_in_cooldown, is_duplicate, update_trade_log
+from utils.telegram_service import start_telegram_listener, is_killed, send_telegram_message
 
 # === ENV & Logging Setup ===
 load_dotenv()
@@ -34,11 +37,23 @@ PAIRMAP = {
 def main():
     logger.info("🧠 Starting ExtremeViper-DRYRUN safely...")
 
+    # === 1. Validate Environment ===
     if not validate_env():
         logger.error("❌ Missing required environment variables. Exiting.")
         return
 
+    # === 2. Start Telegram Kill-Switch Listener ===
+    start_telegram_listener()
+    send_telegram_message("🚀 ExtremeViper started safely in DRYRUN mode.")
+
+    # === 3. Main Loop ===
     while True:
+        # --- Global Kill-Switch Check ---
+        if is_killed():
+            logger.warning("🛑 Kill flag active — skipping all trades.")
+            time.sleep(10)
+            continue
+
         for broker_name in ENABLED_BROKERS:
             broker_name = broker_name.strip().lower()
             pairs = PAIRMAP.get(broker_name, [])
@@ -46,13 +61,14 @@ def main():
 
             for pair in pairs:
                 try:
+                    # --- Fetch Signal ---
                     logger.info(f"📡 Fetching live signal for {pair} via {broker_name.upper()}...")
                     signal = fetch_live_signal(pair, broker_name)
                     if not signal:
                         logger.warning(f"⚠️ No signal data for {pair}")
                         continue
 
-                    # --- Score Extraction ---
+                    # --- Score Signal ---
                     scored = score_signal(signal)
                     if isinstance(scored, dict):
                         score = float(scored.get("score", 0))
@@ -61,7 +77,6 @@ def main():
 
                     threshold = get_adaptive_threshold(signal)
                     lot_size = calculate_lot_size(score, broker_name)
-
                     logger.info(
                         f"🧠 Scored {pair} = {score:.2f}/10 | Threshold = {threshold:.2f} | Lot Size = {lot_size:.5f}"
                     )
@@ -90,12 +105,14 @@ def main():
                             tp=signal.get("take_profit"),
                             lot_size=lot_size,
                         )
-                        logger.info(f"✅ Order Placed: {result}")
+                        logger.info(f"✅ LIVE ORDER: {result}")
                         update_trade_log(pair, broker_name)
+                        send_telegram_message(f"✅ LIVE ORDER: {pair} | Side: {signal.get('side')} | Size: {lot_size:.5f}")
 
                 except Exception as e:
                     logger.error(f"💥 Error while processing {pair} ({broker_name}): {e}", exc_info=False)
 
+        # --- Loop Delay ---
         time.sleep(30)  # 🕒 Delay between full broker loops
 
 
