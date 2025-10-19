@@ -5,5 +5,14 @@
     "last_signal_time": 1760580000.84272,
     "last_trade_time": 1760580000.8430758,
     "last_trade_result": "win"
-  }
+  },
+  "kraken:ETH/USD": 1760609850.8625188,
+  "kraken:ADA/USD": 1760609851.567265,
+  "kraken:XRP/USD": 1760901113.2959192,
+  "kraken:SOL/USD": 1760901454.2056248,
+  "kraken:DOT/USD": 1760609853.7924604,
+  "kraken:BTC/USD": 1760609817.1355011,
+  "oanda:EUR/USD": 1760901485.3842697,
+  "oanda:EUR/JPY": 1760901486.8434649,
+  "oanda:EUR/GBP": 1760901487.570719
 }

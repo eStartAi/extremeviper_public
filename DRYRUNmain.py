@@ -1,10 +1,10 @@
 # ==============================================================
-# 🐍 ExtremeViper DRY-RUN Engine (v0.1-SAFE)
+# 🐍 ExtremeViper DRY-RUN Engine (v0.1.1-SAFE-PnL)
 # --------------------------------------------------------------
 # Description:
 # Multi-broker scanner (OANDA, Kraken) with adaptive throttle,
 # confidence scoring, risk-based lot sizing, duplicate/cooldown filters,
-# and Telegram kill-switch + status command for full safety.
+# Telegram kill-switch + status command, and PnL auto-shutdown logic.
 # ==============================================================
 
 import os
@@ -13,6 +13,7 @@ import logging
 from dotenv import load_dotenv
 
 from broker import get_broker
+from utils.pnl_logger import log_trade_result
 from utils.validate_env import validate_env
 from utils.signal_fetcher import fetch_live_signal
 from utils.score_engine import score_signal
@@ -31,8 +32,9 @@ ENABLED_BROKERS = os.getenv("ENABLED_BROKERS", "oanda,kraken").split(",")
 
 PAIRMAP = {
     "oanda": os.getenv("OANDA_PAIRS", "EUR/USD,GBP/USD").split(","),
-    "kraken": os.getenv("KRAKEN_PAIRS", "BTC/USD,ETH/USD").split(",")
+    "kraken": os.getenv("KRAKEN_PAIRS", "BTC/USD,ETH/USD").split(","),
 }
+
 
 def main():
     logger.info("🧠 Starting ExtremeViper-DRYRUN safely...")
@@ -54,6 +56,7 @@ def main():
             time.sleep(10)
             continue
 
+        # --- Broker Scanning ---
         for broker_name in ENABLED_BROKERS:
             broker_name = broker_name.strip().lower()
             pairs = PAIRMAP.get(broker_name, [])
@@ -107,7 +110,13 @@ def main():
                         )
                         logger.info(f"✅ LIVE ORDER: {result}")
                         update_trade_log(pair, broker_name)
-                        send_telegram_message(f"✅ LIVE ORDER: {pair} | Side: {signal.get('side')} | Size: {lot_size:.5f}")
+                        send_telegram_message(
+                            f"✅ LIVE ORDER: {pair} | Side: {signal.get('side')} | Size: {lot_size:.5f}"
+                        )
+
+                        # --- Log PnL (placeholder or API result) ---
+                        profit_usd = result.get("profit_usd", 0.0)
+                        log_trade_result(pair, broker_name, profit_usd)
 
                 except Exception as e:
                     logger.error(f"💥 Error while processing {pair} ({broker_name}): {e}", exc_info=False)

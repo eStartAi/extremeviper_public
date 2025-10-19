@@ -1,0 +1,281 @@
+{
+  "trades": [
+    {
+      "timestamp": "2025-10-19T19:05:33.374144",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:05:34.850160",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:05:35.810880",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:06:42.006811",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:06:43.296569",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:06:44.103333",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:06:46.448136",
+      "pair": "SOL/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:07:51.000034",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:07:52.470866",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:07:53.307850",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:07:55.453263",
+      "pair": "SOL/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:08:59.875258",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:09:01.498955",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:09:02.492672",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:09:04.445621",
+      "pair": "SOL/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:10:08.364518",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:10:09.746344",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:10:10.584215",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:10:12.271382",
+      "pair": "SOL/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:11:16.136816",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:11:17.349070",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:11:18.145848",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:11:20.386881",
+      "pair": "SOL/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:11:53.731070",
+      "pair": "XRP/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:12:25.051189",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:12:26.212221",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:12:27.035503",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:12:29.354116",
+      "pair": "SOL/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:13:33.751264",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:13:35.402660",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:13:36.126179",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:13:38.183313",
+      "pair": "SOL/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:14:42.155538",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:14:43.383685",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:14:44.133201",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:14:46.338867",
+      "pair": "SOL/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:15:49.915693",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:15:51.159722",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:15:51.971071",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:16:57.683968",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:16:58.909686",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:16:59.638989",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:17:34.655655",
+      "pair": "SOL/USD",
+      "broker": "kraken",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:18:05.891742",
+      "pair": "EUR/USD",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:18:07.279791",
+      "pair": "EUR/JPY",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    },
+    {
+      "timestamp": "2025-10-19T19:18:08.080439",
+      "pair": "EUR/GBP",
+      "broker": "oanda",
+      "profit_usd": 0.0
+    }
+  ],
+  "total_pnl": 0.0
+}

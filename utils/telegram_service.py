@@ -1,137 +1,211 @@
 import os
+import time
 import logging
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="apscheduler")
-from telegram import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Update,
-)
-from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    CallbackQueryHandler,
-    ContextTypes,
-)
-import subprocess
-
+import threading
+import requests
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 FLAG_FILE = "kill.flag"
-MODE_FILE = "mode.flag"  # stores LIVE or DRYRUN
+POLL_INTERVAL = 5  # seconds
 
-# =========================
-# === Utility Functions ===
-# =========================
 
-def set_mode(mode: str):
-    """Write mode (LIVE / DRYRUN) to file."""
-    with open(MODE_FILE, "w") as f:
-        f.write(mode)
-    logger.info(f"Mode set to {mode}")
+# -----------------------------------------------------------
+#  Core message + kill-switch functions
+# -----------------------------------------------------------
 
-def get_mode() -> str:
-    """Read mode file or default to DRYRUN."""
-    if not os.path.exists(MODE_FILE):
-        return "DRYRUN"
-    return open(MODE_FILE).read().strip().upper()
+def send_telegram_message(text: str):
+    """Send any text message to Telegram with debug logging."""
+    if not BOT_TOKEN or not CHAT_ID:
+        logger.warning("⚠️ Telegram not configured; message skipped.")
+        return
+
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        response = requests.post(url, data={"chat_id": CHAT_ID, "text": text})
+        if response.status_code != 200:
+            logger.error(
+                f"❌ Telegram send failed [{response.status_code}]: {response.text}"
+            )
+        else:
+            logger.info("📨 Telegram message sent successfully.")
+    except Exception as e:
+        logger.error(f"❌ Telegram send error: {e}")
+
+
+def is_killed() -> bool:
+    return os.path.exists(FLAG_FILE)
+
 
 def set_kill_flag():
-    open(FLAG_FILE, "w").close()
-    logger.warning("🚨 Kill switch activated!")
+    with open(FLAG_FILE, "w") as f:
+        f.write(f"Killed at {time.ctime()}")
+    logger.warning("🛑 Kill flag activated.")
+
 
 def clear_kill_flag():
     if os.path.exists(FLAG_FILE):
         os.remove(FLAG_FILE)
-        logger.info("✅ Kill switch deactivated.")
+        logger.info("✅ Kill flag cleared. Trading resumed.")
 
-def restart_bot():
-    """Restart the systemd service for ExtremeViper."""
-    try:
-        subprocess.run(
-            ["sudo", "systemctl", "restart", "extremeviper.service"],
-            check=True,
-        )
-        return "🔁 Bot service restarted successfully!"
-    except Exception as e:
-        return f"❌ Restart failed: {e}"
 
-# =========================
-# === Telegram Commands ===
-# =========================
+def get_status_text():
+    if is_killed():
+        return "🛑 ExtremeViper is *PAUSED* (kill flag active)."
+    return "✅ ExtremeViper is *RUNNING* normally."
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Main menu when /start is sent."""
-    keyboard = [
-        [
-            InlineKeyboardButton("🟢 Enable Live Mode", callback_data="enable_live"),
-            InlineKeyboardButton("🔴 Enable DRYRUN Mode", callback_data="enable_dryrun"),
-        ],
-        [
-            InlineKeyboardButton("📊 Show Stats", callback_data="show_stats"),
-            InlineKeyboardButton("🔁 Restart Bot", callback_data="restart_bot"),
-        ],
-        [
-            InlineKeyboardButton("🛑 Kill Switch", callback_data="kill_bot"),
-            InlineKeyboardButton("♻️ Resume Bot", callback_data="resume_bot"),
-        ],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text(
-        f"🤖 <b>ExtremeViper Control Panel</b>\n\n"
-        f"Current Mode: <b>{get_mode()}</b>\n"
-        f"Kill Flag: {'🚫 ACTIVE' if os.path.exists(FLAG_FILE) else '✅ CLEAR'}",
-        reply_markup=reply_markup,
-        parse_mode="HTML",
-    )
 
-# =========================
-# === Button Callbacks ===
-# =========================
+# -----------------------------------------------------------
+#  Telegram polling listener for /kill /resume /status
+# -----------------------------------------------------------
 
-async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    action = query.data
-
-    if action == "enable_live":
-        set_mode("LIVE")
-        await query.edit_message_text("🟢 Live Mode Enabled.")
-    elif action == "enable_dryrun":
-        set_mode("DRYRUN")
-        await query.edit_message_text("🔴 DRYRUN Mode Enabled.")
-    elif action == "show_stats":
-        # Placeholder – connect to your PnL or score system later
-        await query.edit_message_text("📊 Bot Stats:\n\n- Pairs Scanned: 8\n- Trades Today: 3\n- Win Rate: 66%")
-    elif action == "restart_bot":
-        msg = restart_bot()
-        await query.edit_message_text(msg)
-    elif action == "kill_bot":
-        set_kill_flag()
-        await query.edit_message_text("🛑 Kill switch activated! All trading halted.")
-    elif action == "resume_bot":
-        clear_kill_flag()
-        await query.edit_message_text("♻️ Bot resumed. Safe to continue trading.")
-    else:
-        await query.edit_message_text("❓ Unknown command")
-
-# =========================
-# === Run Telegram Bot ===
-# =========================
-
-def run_telegram_service():
-    """Launch Telegram control interface."""
-    if not BOT_TOKEN:
-        print("⚠️ TELEGRAM_BOT_TOKEN missing in .env")
+def start_telegram_listener():
+    """Background thread to handle Telegram commands via polling."""
+    if not BOT_TOKEN or not CHAT_ID:
+        logger.warning("⚠️ Telegram not configured; listener skipped.")
         return
 
-    app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CallbackQueryHandler(button_handler))
-    logger.info("🚀 Telegram control service running...")
-    app.run_polling()
+    def poll_loop():
+        logger.info("🤖 Telegram listener started.")
+        offset = None
+        while True:
+            try:
+                url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
+                if offset:
+                    url += f"?offset={offset}"
+                res = requests.get(url, timeout=30).json()
 
-if __name__ == "__main__":
-    run_telegram_service()
+                for update in res.get("result", []):
+                    offset = update["update_id"] + 1
+                    msg = update.get("message", {})
+                    text = msg.get("text", "").strip().lower()
+                    user = msg.get("from", {}).get("username", "unknown")
+
+                    if text == "/kill":
+                        set_kill_flag()
+                        send_telegram_message(f"🧨 Bot stopped by @{user}")
+                    elif text == "/resume":
+                        clear_kill_flag()
+                        send_telegram_message(f"🚀 Bot resumed by @{user}")
+                    elif text == "/status":
+                        send_telegram_message(get_status_text())
+                    else:
+                        send_telegram_message(
+                            "⚙️ Commands:\n"
+                            "/kill – stop trading\n"
+                            "/resume – resume trading\n"
+                            "/status – bot status"
+                        )
+            except Exception as e:
+                logger.error(f"Telegram listener error: {e}")
+            time.sleep(POLL_INTERVAL)
+
+    threading.Thread(target=poll_loop, daemon=True).start()
+import os
+import time
+import logging
+import threading
+import requests
+
+logger = logging.getLogger(__name__)
+
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+FLAG_FILE = "kill.flag"
+POLL_INTERVAL = 5  # seconds
+
+
+# -----------------------------------------------------------
+#  Core message + kill-switch functions
+# -----------------------------------------------------------
+
+def send_telegram_message(text: str):
+    """Send any text message to Telegram with debug logging."""
+    if not BOT_TOKEN or not CHAT_ID:
+        logger.warning("⚠️ Telegram not configured; message skipped.")
+        return
+
+    try:
+        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+        response = requests.post(url, data={"chat_id": CHAT_ID, "text": text})
+        if response.status_code != 200:
+            logger.error(
+                f"❌ Telegram send failed [{response.status_code}]: {response.text}"
+            )
+        else:
+            logger.info("📨 Telegram message sent successfully.")
+    except Exception as e:
+        logger.error(f"❌ Telegram send error: {e}")
+
+
+def is_killed() -> bool:
+    return os.path.exists(FLAG_FILE)
+
+
+def set_kill_flag():
+    with open(FLAG_FILE, "w") as f:
+        f.write(f"Killed at {time.ctime()}")
+    logger.warning("🛑 Kill flag activated.")
+
+
+def clear_kill_flag():
+    if os.path.exists(FLAG_FILE):
+        os.remove(FLAG_FILE)
+        logger.info("✅ Kill flag cleared. Trading resumed.")
+
+
+def get_status_text():
+    if is_killed():
+        return "🛑 ExtremeViper is *PAUSED* (kill flag active)."
+    return "✅ ExtremeViper is *RUNNING* normally."
+
+
+# -----------------------------------------------------------
+#  Telegram polling listener for /kill /resume /status
+# -----------------------------------------------------------
+
+def start_telegram_listener():
+    """Background thread to handle Telegram commands via polling."""
+    if not BOT_TOKEN or not CHAT_ID:
+        logger.warning("⚠️ Telegram not configured; listener skipped.")
+        return
+
+    def poll_loop():
+        logger.info("🤖 Telegram listener started.")
+        offset = None
+        while True:
+            try:
+                url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
+                if offset:
+                    url += f"?offset={offset}"
+                res = requests.get(url, timeout=30).json()
+
+                for update in res.get("result", []):
+                    offset = update["update_id"] + 1
+                    msg = update.get("message", {})
+                    text = msg.get("text", "").strip().lower()
+                    user = msg.get("from", {}).get("username", "unknown")
+
+                    if text == "/kill":
+                        set_kill_flag()
+                        send_telegram_message(f"🧨 Bot stopped by @{user}")
+                    elif text == "/resume":
+                        clear_kill_flag()
+                        send_telegram_message(f"🚀 Bot resumed by @{user}")
+                    elif text == "/status":
+                        send_telegram_message(get_status_text())
+                    else:
+                        send_telegram_message(
+                            "⚙️ Commands:\n"
+                            "/kill – stop trading\n"
+                            "/resume – resume trading\n"
+                            "/status – bot status"
+                        )
+            except Exception as e:
+                logger.error(f"Telegram listener error: {e}")
+            time.sleep(POLL_INTERVAL)
+
+    threading.Thread(target=poll_loop, daemon=True).start()
